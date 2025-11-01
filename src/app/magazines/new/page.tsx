@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
-import { useSubmitMagazine } from "./hooks/index.submit.hook";
+import { submitMagazine } from "./hooks/index.submit.hook";
 import { useRouter } from "next/navigation";
 
 interface FormData {
@@ -203,7 +203,7 @@ export default function Page() {
       };
 
       // 3. Supabase 등록 실행
-      const result = await useSubmitMagazine(magazineData);
+      const result = await submitMagazine(magazineData);
 
       // 4. 결과 처리
       if (result.success && result.magazineId) {

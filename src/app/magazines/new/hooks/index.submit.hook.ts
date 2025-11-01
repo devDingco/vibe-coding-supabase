@@ -16,10 +16,10 @@ export interface SubmitResult {
 }
 
 /**
- * 매거진 등록 훅
+ * 매거진 등록 함수
  * Supabase magazine 테이블에 데이터를 등록하고 결과를 반환합니다.
  */
-export async function useSubmitMagazine(data: MagazineFormData): Promise<SubmitResult> {
+export async function submitMagazine(data: MagazineFormData): Promise<SubmitResult> {
   try {
     let imageUrl: string | null = null;
 
@@ -34,7 +34,7 @@ export async function useSubmitMagazine(data: MagazineFormData): Promise<SubmitR
       const filePath = `${year}/${month}/${day}/${uuid}.jpg`;
 
       // 1-2. Supabase Storage 버킷에 업로드
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('vibe-coding-supabase-storage')
         .upload(filePath, data.imageFile, {
           contentType: data.imageFile.type,
