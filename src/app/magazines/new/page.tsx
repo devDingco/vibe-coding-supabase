@@ -194,6 +194,7 @@ export default function Page() {
 
       // 2. Supabase에 등록할 데이터 준비
       const magazineData = {
+        imageFile: imageFile,
         category: formData.category,
         title: formData.title,
         description: formData.summary,

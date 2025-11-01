@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 
 export interface Magazine {
   id: string;
+  image_url: string;
   category: string;
   title: string;
   description: string;
@@ -25,7 +26,7 @@ export function useMagazines() {
         // Supabase에서 magazine 테이블 조회 (10개)
         const { data, error: fetchError } = await supabase
           .from('magazine')
-          .select('id, category, title, description, tags')
+          .select('id, image_url, category, title, description, tags')
           .limit(10);
 
         if (fetchError) {

@@ -91,7 +91,7 @@ export default function GlossaryCards() {
           >
             <div className="magazine-card-image">
               <img 
-                src="https://images.unsplash.com/photo-1593720213681-e9a8778330a7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx3ZWIlMjBkZXZlbG9wbWVudCUyMGNvZGluZ3xlbnwxfHx8fDE3NjEwMDM5OTZ8MA&ixlib=rb-4.1.0&q=80&w=1080"
+                src={magazine.image_url}
                 alt={magazine.title}
               />
               <div className={`magazine-card-category ${getCategoryColor(magazine.category)}`}>

@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 
 export interface MagazineDetailData {
   id: string;
-  image_url?: string;
+  image_url: string;
   category: string;
   title: string;
   description: string;
