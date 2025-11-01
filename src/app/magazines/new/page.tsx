@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
+import { useSubmitMagazine } from "./hooks/index.submit.hook";
+import { useRouter } from "next/navigation";
 
 interface FormData {
   category: string;
@@ -109,6 +111,7 @@ function CustomDropdown({
 }
 
 export default function Page() {
+  const router = useRouter();
   const onNavigateToList = () => {
     window.location.href = '/magazines';
   };
@@ -119,6 +122,7 @@ export default function Page() {
     content: "",
     tags: ""
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
@@ -174,36 +178,49 @@ export default function Page() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const tagsArray = formData.tags
-      .split(" ")
-      .map(tag => tag.trim())
-      .filter(tag => tag.length > 0);
-
-    const newArticle = {
-      imageFile: imageFile,
-      category: formData.category,
-      title: formData.title,
-      summary: formData.summary,
-      content: formData.content,
-      tags: tagsArray
-    };
-
-    console.log("새 아티클:", newArticle);
-    alert("아티클이 등록되었습니다!");
+    if (isSubmitting) return;
     
-    // 폼 초기화
-    setFormData({
-      category: "",
-      title: "",
-      summary: "",
-      content: "",
-      tags: ""
-    });
-    setImageFile(null);
-    setImagePreview("");
+    setIsSubmitting(true);
+    
+    try {
+      // 1. 태그 배열 변환
+      const tagsArray = formData.tags
+        .split(" ")
+        .map(tag => tag.trim())
+        .filter(tag => tag.length > 0);
+
+      // 2. Supabase에 등록할 데이터 준비
+      const magazineData = {
+        category: formData.category,
+        title: formData.title,
+        description: formData.summary,
+        content: formData.content,
+        tags: tagsArray.length > 0 ? tagsArray : null
+      };
+
+      // 3. Supabase 등록 실행
+      const result = await useSubmitMagazine(magazineData);
+
+      // 4. 결과 처리
+      if (result.success && result.magazineId) {
+        // 4-1. 성공 알림
+        alert("등록에 성공하였습니다.");
+        
+        // 4-2. 상세 페이지로 이동
+        router.push(`/magazines/${result.magazineId}`);
+      } else {
+        // 4-3. 실패 알림
+        alert(`등록에 실패하였습니다: ${result.error || '알 수 없는 오류'}`);
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      console.error("등록 중 오류:", error);
+      alert("등록 중 오류가 발생했습니다.");
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -351,8 +368,12 @@ export default function Page() {
           <p className="magazine-form-hint">공백으로 구분하여 입력해주세요 (예: #React #Node.js #WebDev)</p>
         </div>
 
-        <button type="submit" className="magazine-form-submit">
-          아티클 등록하기
+        <button 
+          type="submit" 
+          className="magazine-form-submit"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "등록 중..." : "아티클 등록하기"}
         </button>
       </form>
     </div>
