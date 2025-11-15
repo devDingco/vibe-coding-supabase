@@ -2,17 +2,14 @@
 
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { usePayment } from "./hooks/index.payment.hook";
 
 export default function GlossaryPayments() {
   const router = useRouter();
+  const { handleSubscribe } = usePayment();
 
   const handleNavigateToList = () => {
     router.push('/magazines');
-  };
-
-  const handleSubscribe = () => {
-    alert('구독이 완료되었습니다!');
-    handleNavigateToList();
   };
 
   return (
