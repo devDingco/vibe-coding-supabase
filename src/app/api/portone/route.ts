@@ -80,16 +80,19 @@ export async function POST(request: NextRequest) {
       const endAt = new Date(now);
       endAt.setDate(endAt.getDate() + 30);
       
-      // end_at + 1일 밤 11:59:59 (한국시간 기준)
+      // end_at + 1일 밤 11:59:59 (한국시간 기준) => UTC로 변환하여 저장
+      // 한국시간(KST) = UTC + 9시간
+      // 한국시간 23:59:59 = UTC 14:59:59
       const endGraceAt = new Date(endAt);
       endGraceAt.setDate(endGraceAt.getDate() + 1);
-      endGraceAt.setHours(23 + 9, 59, 59, 999); // UTC+9 (한국시간)
+      endGraceAt.setUTCHours(14, 59, 59, 999); // 한국시간 23:59:59를 UTC로 변환
       
-      // end_at + 1일 오전 10시~11시 사이 임의 시각 (한국시간 기준)
+      // end_at + 1일 오전 10시~11시 사이 임의 시각 (한국시간 기준) => UTC로 변환하여 저장
+      // 한국시간 10시~11시 = UTC 1시~2시
       const nextScheduleAt = new Date(endAt);
       nextScheduleAt.setDate(nextScheduleAt.getDate() + 1);
       const randomMinutes = Math.floor(Math.random() * 60); // 0~59분
-      nextScheduleAt.setHours(10 + 9, randomMinutes, 0, 0); // UTC+9 (한국시간 10시~11시)
+      nextScheduleAt.setUTCHours(1, randomMinutes, 0, 0); // 한국시간 10시~11시를 UTC로 변환
       
       // 5-3. 고유한 next_schedule_id 생성
       const nextScheduleId = randomUUID();
