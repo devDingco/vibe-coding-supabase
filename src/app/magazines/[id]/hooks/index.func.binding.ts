@@ -53,7 +53,7 @@ export const useMagazineDetail = (id: string): UseMagazineDetailResult => {
             // 이미 전체 URL인 경우, 직접 변환
             thumbnailUrl = magazineData.image_url.replace(
               '/storage/v1/object/public/',
-              '/storage/v1/render/image/public/'
+              '/storage/v1/object/public/'
             );
           } else {
             // storage path인 경우 getPublicUrl로 기본 URL을 가져옴
@@ -64,7 +64,7 @@ export const useMagazineDetail = (id: string): UseMagazineDetailResult => {
             // Image Transformation을 위해 URL 경로를 변경
             thumbnailUrl = publicUrlData.publicUrl.replace(
               '/storage/v1/object/public/',
-              '/storage/v1/render/image/public/'
+              '/storage/v1/object/public/'
             );
           }
           

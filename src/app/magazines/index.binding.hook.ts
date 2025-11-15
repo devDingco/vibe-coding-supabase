@@ -52,7 +52,7 @@ export function useMagazines() {
             // 이미 전체 URL인 경우, 직접 변환
             thumbnailUrl = magazine.image_url.replace(
               '/storage/v1/object/public/',
-              '/storage/v1/render/image/public/'
+              '/storage/v1/object/public/'
             );
           } else {
             // storage path인 경우, getPublicUrl로 URL 생성 후 변환
@@ -62,7 +62,7 @@ export function useMagazines() {
 
             thumbnailUrl = publicUrlData.publicUrl.replace(
               '/storage/v1/object/public/',
-              '/storage/v1/render/image/public/'
+              '/storage/v1/object/public/'
             );
           }
 
