@@ -109,7 +109,8 @@ export async function POST(request: NextRequest) {
           end_at: endAt.toISOString(),
           end_grace_at: endGraceAt.toISOString(),
           next_schedule_at: nextScheduleAt.toISOString(),
-          next_schedule_id: nextScheduleId
+          next_schedule_id: nextScheduleId,
+          user_id: paymentInfo.customData
         });
 
       if (insertError) {
@@ -136,6 +137,7 @@ export async function POST(request: NextRequest) {
           amount: {
             total: paymentInfo.amount?.total || 0
           },
+          customData: paymentInfo.customData,
           currency: 'KRW'
         },
         timeToPay: nextScheduleAt.toISOString()
@@ -229,7 +231,8 @@ export async function POST(request: NextRequest) {
           end_at: existingPayment.end_at,
           end_grace_at: existingPayment.end_grace_at,
           next_schedule_at: existingPayment.next_schedule_at,
-          next_schedule_id: existingPayment.next_schedule_id
+          next_schedule_id: existingPayment.next_schedule_id,
+          user_id: existingPayment.user_id
         });
 
       if (cancelInsertError) {

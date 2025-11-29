@@ -57,7 +57,17 @@ export async function submitMagazine(data: MagazineFormData): Promise<SubmitResu
       imageUrl = publicUrlData.publicUrl;
     }
 
-    // 2. magazine 테이블에 데이터 삽입
+    // 2. 로그인된 사용자 정보 가져오기
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return {
+        success: false,
+        error: '로그인이 필요합니다.',
+      };
+    }
+
+    // 3. magazine 테이블에 데이터 삽입 (user_id 포함)
     const { data: insertedData, error } = await supabase
       .from('magazine')
       .insert({
@@ -67,11 +77,12 @@ export async function submitMagazine(data: MagazineFormData): Promise<SubmitResu
         description: data.description,
         content: data.content,
         tags: data.tags,
+        user_id: user.id,
       })
       .select('id')
       .single();
 
-    // 3. 에러 처리
+    // 4. 에러 처리
     if (error) {
       console.error('매거진 등록 실패:', error);
       return {
@@ -80,7 +91,7 @@ export async function submitMagazine(data: MagazineFormData): Promise<SubmitResu
       };
     }
 
-    // 4. 성공 처리
+    // 5. 성공 처리
     return {
       success: true,
       magazineId: insertedData?.id,

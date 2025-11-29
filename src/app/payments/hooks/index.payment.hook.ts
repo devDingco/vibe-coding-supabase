@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import PortOne from '@portone/browser-sdk/v2';
+import { supabase } from '@/lib/supabase';
 
 /**
  * 포트원 V2 빌링키 발급 및 결제 처리 hook
@@ -12,11 +13,23 @@ export function usePayment() {
   /**
    * 구독하기 버튼 클릭 시 실행되는 함수
    * 1. 빌링키 발급
-   * 2. 결제 API 호출
+   * 2. 결제 API 호출 (인증토큰 헤더 포함, customData에 user_id 전달)
    * 3. 성공 시 알림 및 페이지 이동
    */
   const handleSubscribe = async () => {
     try {
+      // 0. 인증 세션 확인 및 토큰 가져오기
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        alert('로그인이 필요합니다. 로그인 후 다시 시도해주세요.');
+        router.push('/login');
+        return;
+      }
+
+      const accessToken = session.access_token;
+      const userId = session.user.id;
+
       // 1. 빌링키 발급 요청
       const issueResponse = await PortOne.requestIssueBillingKey({
         storeId: process.env.NEXT_PUBLIC_PORTONE_STORE_ID!,
@@ -35,6 +48,7 @@ export function usePayment() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`, // 인증토큰 헤더 추가
         },
         body: JSON.stringify({
           billingKey: issueResponse.billingKey,
@@ -43,6 +57,7 @@ export function usePayment() {
           customer: {
             id: `customer_${Date.now()}`,
           },
+          customData: userId, // 로그인된 user_id 전달
         }),
       });
 

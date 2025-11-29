@@ -10,6 +10,7 @@ interface PaymentRecord {
   start_at: string;
   end_grace_at: string;
   created_at: string;
+  user_id: string;
 }
 
 // 구독 상태 정의
@@ -39,15 +40,33 @@ export function usePaymentStatus() {
     try {
       setIsLoading(true);
       
-      // Step 1: payment 테이블에서 모든 데이터 조회
+      // Step 1: 로그인된 사용자 확인
       setChecklist(prev => ({
         ...prev,
-        "Step 1": "✅ payment 테이블 조회 시작"
+        "Step 1": "✅ 로그인된 사용자 확인 시작"
+      }));
+
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+      if (authError || !user) {
+        throw new Error("로그인된 사용자를 찾을 수 없습니다.");
+      }
+
+      setChecklist(prev => ({
+        ...prev,
+        "Step 1-1": `✅ 로그인된 사용자 확인 완료 (user_id: ${user.id})`
+      }));
+
+      // Step 2: payment 테이블에서 내 결제 정보만 조회
+      setChecklist(prev => ({
+        ...prev,
+        "Step 2": "✅ payment 테이블 조회 시작 (내 결제 정보만)"
       }));
 
       const { data: allPayments, error: fetchError } = await supabase
         .from('payment')
-        .select('transaction_key, status, start_at, end_grace_at, created_at')
+        .select('transaction_key, status, start_at, end_grace_at, created_at, user_id')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (fetchError) {
@@ -56,13 +75,13 @@ export function usePaymentStatus() {
 
       setChecklist(prev => ({
         ...prev,
-        "Step 1-1": `✅ payment 테이블 조회 완료 (총 ${allPayments?.length || 0}건)`
+        "Step 2-1": `✅ payment 테이블 조회 완료 (총 ${allPayments?.length || 0}건)`
       }));
 
       if (!allPayments || allPayments.length === 0) {
         setChecklist(prev => ({
           ...prev,
-          "Step 1-2": "✅ 조회 결과 0건 - Free 상태로 설정"
+          "Step 2-2": "✅ 조회 결과 0건 - Free 상태로 설정"
         }));
 
         setSubscriptionStatus({
@@ -74,10 +93,10 @@ export function usePaymentStatus() {
         return;
       }
 
-      // Step 2: transaction_key로 그룹화하고 각 그룹에서 created_at 최신 1건씩 추출
+      // Step 3: transaction_key로 그룹화하고 각 그룹에서 created_at 최신 1건씩 추출
       setChecklist(prev => ({
         ...prev,
-        "Step 2": "✅ transaction_key로 그룹화 시작"
+        "Step 3": "✅ transaction_key로 그룹화 시작"
       }));
 
       const groupedByTransactionKey = new Map<string, PaymentRecord>();
@@ -96,13 +115,13 @@ export function usePaymentStatus() {
       
       setChecklist(prev => ({
         ...prev,
-        "Step 2-1": `✅ 그룹화 완료 (${latestPayments.length}개 그룹, 각 그룹별 최신 1건 추출)`
+        "Step 3-1": `✅ 그룹화 완료 (${latestPayments.length}개 그룹, 각 그룹별 최신 1건 추출)`
       }));
 
-      // Step 3: status === "Paid"이고 start_at <= 현재시각 <= end_grace_at 조건 필터링
+      // Step 4: status === "Paid"이고 start_at <= 현재시각 <= end_grace_at 조건 필터링
       setChecklist(prev => ({
         ...prev,
-        "Step 3": "✅ 필터링 조건 적용 시작"
+        "Step 4": "✅ 필터링 조건 적용 시작"
       }));
 
       const now = new Date();
@@ -120,19 +139,19 @@ export function usePaymentStatus() {
 
       setChecklist(prev => ({
         ...prev,
-        "Step 3-1": `✅ 필터링 완료 (조건 충족: ${activeSubscriptions.length}건)`
+        "Step 4-1": `✅ 필터링 완료 (조건 충족: ${activeSubscriptions.length}건)`
       }));
 
-      // Step 4: 조회 결과에 따른 상태 설정
+      // Step 5: 조회 결과에 따른 상태 설정
       if (activeSubscriptions.length > 0) {
         // 1건 이상 - 구독중
         const activePayment = activeSubscriptions[0];
         
         setChecklist(prev => ({
           ...prev,
-          "Step 4": "✅ 조회 결과 1건 이상 - 구독중 상태로 설정",
-          "Step 4-1": `✅ transaction_key: ${activePayment.transaction_key}`,
-          "Step 4-2": "✅ '구독취소' 버튼 활성화"
+          "Step 5": "✅ 조회 결과 1건 이상 - 구독중 상태로 설정",
+          "Step 5-1": `✅ transaction_key: ${activePayment.transaction_key}`,
+          "Step 5-2": "✅ '구독취소' 버튼 활성화"
         }));
 
         setSubscriptionStatus({
@@ -146,8 +165,8 @@ export function usePaymentStatus() {
         // 0건 - Free
         setChecklist(prev => ({
           ...prev,
-          "Step 4": "✅ 조회 결과 0건 - Free 상태로 설정",
-          "Step 4-1": "✅ '구독하기' 버튼 활성화"
+          "Step 5": "✅ 조회 결과 0건 - Free 상태로 설정",
+          "Step 5-1": "✅ '구독하기' 버튼 활성화"
         }));
 
         setSubscriptionStatus({

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 interface CancelPaymentResponse {
   success: boolean;
@@ -21,11 +22,23 @@ export function usePaymentCancel() {
     try {
       setIsLoading(true);
 
-      // Step 1: 구독 취소 API 요청
+      // Step 1: 인증 토큰 가져오기
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        alert("로그인이 필요합니다.");
+        router.push("/auth/login");
+        return { success: false, error: "인증 토큰이 없습니다." };
+      }
+
+      const accessToken = session.access_token;
+
+      // Step 2: 구독 취소 API 요청
       const response = await fetch('/api/payments/cancel', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           transactionKey
@@ -34,12 +47,12 @@ export function usePaymentCancel() {
 
       const data: CancelPaymentResponse = await response.json();
 
-      // Step 2: 응답 처리
+      // Step 3: 응답 처리
       if (data.success) {
-        // Step 3: 알림 메시지 표시
+        // Step 4: 알림 메시지 표시
         alert("구독이 취소되었습니다.");
         
-        // Step 4: 페이지 이동
+        // Step 5: 페이지 이동
         router.push("/magazines");
         
         return { success: true };
