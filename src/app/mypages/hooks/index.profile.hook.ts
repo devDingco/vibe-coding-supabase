@@ -1,8 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import type { User } from "@supabase/supabase-js";
 
 // 프로필 데이터 타입 정의
 export interface UserProfile {
@@ -17,11 +16,7 @@ export function useProfile() {
   const [isLoading, setIsLoading] = useState(true);
   const [checklist, setChecklist] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    fetchUserProfile();
-  }, []);
-
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = useCallback(async () => {
     try {
       setIsLoading(true);
       
@@ -104,7 +99,11 @@ export function useProfile() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, [fetchUserProfile]);
 
   // 가입일 포맷 함수: ISO 날짜를 YYYY.MM 형식으로 변환
   const formatJoinDate = (isoDate: string): string => {
