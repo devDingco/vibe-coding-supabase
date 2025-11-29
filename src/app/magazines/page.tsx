@@ -1,8 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { LogIn, PenSquare, Sparkles } from "lucide-react";
+import { LogIn, LogOut, PenSquare, Sparkles, User } from "lucide-react";
 import { useMagazines } from './index.binding.hook';
+import { useLoginLogoutStatus } from './index.login.logout.status.hook';
 
 const getCategoryColor = (category: string) => {
   const colorMap: Record<string, string> = {
@@ -22,6 +23,14 @@ const getCategoryColor = (category: string) => {
 export default function GlossaryCards() {
   const router = useRouter();
   const { magazines, loading, error } = useMagazines();
+  const { 
+    isLoggedIn, 
+    loading: authLoading, 
+    userInfo, 
+    handleLogout, 
+    goToLogin, 
+    goToMyPage 
+  } = useLoginLogoutStatus();
 
   if (loading) {
     return (
@@ -57,27 +66,59 @@ export default function GlossaryCards() {
         <h1>IT 매거진</h1>
         <p className="magazine-subtitle">최신 기술 트렌드와 인사이트를 전합니다</p>
         <div className="magazine-header-actions">
-          <button 
-            className="magazine-header-button magazine-header-button-ghost"
-            onClick={() => router.push('/auth/login')}
-          >
-            <LogIn className="magazine-button-icon" />
-            <span className="magazine-button-text">로그인</span>
-          </button>
-          <button 
-            className="magazine-header-button magazine-header-button-primary"
-            onClick={() => router.push('/magazines/new')}
-          >
-            <PenSquare className="magazine-button-icon" />
-            <span className="magazine-button-text">글쓰기</span>
-          </button>
-          <button 
-            className="magazine-header-button magazine-header-button-payment"
-            onClick={() => router.push('/payments')}
-          >
-            <Sparkles className="magazine-button-icon" />
-            <span className="magazine-button-text">구독하기</span>
-          </button>
+          {!authLoading && (
+            <>
+              {isLoggedIn ? (
+                /* 로그인 상태 */
+                <>
+                  <div className="magazine-user-info" onClick={goToMyPage}>
+                    {userInfo.profileImage ? (
+                      <img 
+                        src={userInfo.profileImage} 
+                        alt={userInfo.name || '프로필'} 
+                        className="magazine-user-avatar"
+                      />
+                    ) : (
+                      <div className="magazine-user-avatar-placeholder">
+                        <User className="magazine-button-icon" />
+                      </div>
+                    )}
+                    <span className="magazine-user-name">{userInfo.name}</span>
+                  </div>
+                  <button 
+                    className="magazine-header-button magazine-header-button-ghost"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="magazine-button-icon" />
+                    <span className="magazine-button-text">로그아웃</span>
+                  </button>
+                </>
+              ) : (
+                /* 비로그인 상태 */
+                <button 
+                  className="magazine-header-button magazine-header-button-ghost"
+                  onClick={goToLogin}
+                >
+                  <LogIn className="magazine-button-icon" />
+                  <span className="magazine-button-text">로그인</span>
+                </button>
+              )}
+              <button 
+                className="magazine-header-button magazine-header-button-primary"
+                onClick={() => router.push('/magazines/new')}
+              >
+                <PenSquare className="magazine-button-icon" />
+                <span className="magazine-button-text">글쓰기</span>
+              </button>
+              <button 
+                className="magazine-header-button magazine-header-button-payment"
+                onClick={() => router.push('/payments')}
+              >
+                <Sparkles className="magazine-button-icon" />
+                <span className="magazine-button-text">구독하기</span>
+              </button>
+            </>
+          )}
         </div>
       </div>
       

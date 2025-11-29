@@ -1,27 +1,14 @@
 "use client"
 
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { usePaymentCancel } from "./hooks/index.payment.cancel.hook";
 import { usePaymentStatus } from "./hooks/index.payment.status.hook";
-
-interface UserProfile {
-  profileImage: string;
-  nickname: string;
-  bio: string;
-  joinDate: string;
-}
-
-const mockUserData: UserProfile = {
-  profileImage: "https://images.unsplash.com/photo-1613145997970-db84a7975fbb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9maWxlJTIwcG9ydHJhaXQlMjBwZXJzb258ZW58MXx8fHwxNzYyNTkxMjU5fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-  nickname: "테크러버",
-  bio: "최신 IT 트렌드와 개발 이야기를 공유합니다",
-  joinDate: "2024.03"
-};
+import { useProfile } from "./hooks/index.profile.hook";
 
 function GlossaryMagazinesMypage() {
   const router = useRouter();
-  const [user, setUser] = useState<UserProfile>(mockUserData);
+  const { profile, isLoading: profileLoading, checklist: profileChecklist } = useProfile();
   const { cancelPayment, isLoading: cancelLoading } = usePaymentCancel();
   const { subscriptionStatus, isLoading: statusLoading, checklist, refetch } = usePaymentStatus();
 
@@ -34,6 +21,16 @@ function GlossaryMagazinesMypage() {
       });
     }
   }, [checklist]);
+
+  // 프로필 체크리스트를 콘솔에 출력 (개발 중 확인용)
+  useEffect(() => {
+    if (Object.keys(profileChecklist).length > 0) {
+      console.log("=== 프로필 조회 체크리스트 ===");
+      Object.entries(profileChecklist).forEach(([key, value]) => {
+        console.log(`${key}: ${value}`);
+      });
+    }
+  }, [profileChecklist]);
 
   const handleBackToList = () => {
     router.push('/magazines');
@@ -60,6 +57,29 @@ function GlossaryMagazinesMypage() {
   const isSubscribed = subscriptionStatus.isSubscribed;
   const isLoading = statusLoading || cancelLoading;
 
+  // 프로필이 로딩 중일 때 표시
+  if (profileLoading) {
+    return (
+      <div className="mypage-wrapper">
+        <div className="mypage-header">
+          <h1>프로필 로딩 중...</h1>
+        </div>
+      </div>
+    );
+  }
+
+  // 프로필이 없을 때 (로그인하지 않은 경우)
+  if (!profile) {
+    return (
+      <div className="mypage-wrapper">
+        <div className="mypage-header">
+          <h1>로그인이 필요합니다</h1>
+          <button onClick={() => router.push('/auth/login')}>로그인하기</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mypage-wrapper">
       <button className="mypage-back-btn" onClick={handleBackToList}>
@@ -77,14 +97,24 @@ function GlossaryMagazinesMypage() {
       <div className="mypage-grid">
         {/* 프로필 카드 */}
         <div className="mypage-profile-card">
-          <img 
-            src={user.profileImage} 
-            alt={user.nickname}
-            className="mypage-avatar"
-          />
-          <h2 className="mypage-name">{user.nickname}</h2>
-          <p className="mypage-bio-text">{user.bio}</p>
-          <div className="mypage-join-date">가입일 {user.joinDate}</div>
+          {profile.profileImage ? (
+            <img 
+              src={profile.profileImage} 
+              alt={profile.nickname}
+              className="mypage-avatar"
+            />
+          ) : (
+            <div className="mypage-avatar-fallback">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="24" cy="24" r="20" />
+                <circle cx="24" cy="20" r="8" />
+                <path d="M8 40C8 32 15 28 24 28C33 28 40 32 40 40" />
+              </svg>
+            </div>
+          )}
+          <h2 className="mypage-name">{profile.nickname}</h2>
+          <p className="mypage-bio-text">{profile.bio}</p>
+          <div className="mypage-join-date">가입일 {profile.joinDate}</div>
         </div>
 
         {/* 구독 플랜 카드 */}
