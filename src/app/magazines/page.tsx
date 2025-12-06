@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import { LogIn, LogOut, PenSquare, Sparkles, User } from "lucide-react";
 import { useMagazines } from './index.binding.hook';
 import { useLoginLogoutStatus } from './index.login.logout.status.hook';
+import { useAuthGuard } from './index.guard.auth.hook';
+import { useSubscribeGuard } from './index.guard.subscribe.hook';
 
 const getCategoryColor = (category: string) => {
   const colorMap: Record<string, string> = {
@@ -31,6 +33,12 @@ export default function GlossaryCards() {
     goToLogin, 
     goToMyPage 
   } = useLoginLogoutStatus();
+  
+  // 로그인 권한 가드
+  const { checkLoginRequired } = useAuthGuard({ isLoggedIn });
+  
+  // 구독 권한 가드
+  const { checkSubscriptionRequired } = useSubscribeGuard();
 
   if (loading) {
     return (
@@ -105,14 +113,26 @@ export default function GlossaryCards() {
               )}
               <button 
                 className="magazine-header-button magazine-header-button-primary"
-                onClick={() => router.push('/magazines/new')}
+                onClick={async () => {
+                  // 구독 권한 가드: 구독 여부 검사
+                  if (!(await checkSubscriptionRequired())) {
+                    return; // 비구독 시 작업 중단
+                  }
+                  router.push('/magazines/new');
+                }}
               >
                 <PenSquare className="magazine-button-icon" />
                 <span className="magazine-button-text">글쓰기</span>
               </button>
               <button 
                 className="magazine-header-button magazine-header-button-payment"
-                onClick={() => router.push('/payments')}
+                onClick={() => {
+                  // 로그인 액션 가드: 로그인 여부 검사
+                  if (!checkLoginRequired()) {
+                    return; // 비로그인 시 작업 중단
+                  }
+                  router.push('/payments');
+                }}
               >
                 <Sparkles className="magazine-button-icon" />
                 <span className="magazine-button-text">구독하기</span>
@@ -127,7 +147,13 @@ export default function GlossaryCards() {
           <article 
             key={magazine.id} 
             className="magazine-card"
-            onClick={() => router.push(`/magazines/${magazine.id}`)}
+            onClick={async () => {
+              // 구독 권한 가드: 구독 여부 검사
+              if (!(await checkSubscriptionRequired())) {
+                return; // 비구독 시 작업 중단
+              }
+              router.push(`/magazines/${magazine.id}`);
+            }}
             style={{ cursor: 'pointer' }}
           >
             <div className="magazine-card-image">
